@@ -15,14 +15,16 @@ public class ServerClient {
     public ServerClient(int port) {
         try {
             serverSocket = new ServerSocket(port);
+            System.out.println("Server started");
             socket = serverSocket.accept();
+            System.out.println("Connected");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         dataInputStream = null;
 
-        if(socket != null) {
+        if (socket != null) {
             try {
                 dataInputStream = new DataInputStream(
                         new BufferedInputStream(socket.getInputStream()));
@@ -30,13 +32,19 @@ public class ServerClient {
                 e.printStackTrace();
             }
         }
-
-        while(){
-
+        if (dataInputStream != null) {
+            while (true) {
+                try {
+                    String line = dataInputStream.readUTF();
+                    System.out.println(line);
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
         }
     }
 
     public static void main(String[] args) {
-        ServerClient serverClient = new ServerClient(66666);
+        ServerClient serverClient = new ServerClient(6666);
     }
 }

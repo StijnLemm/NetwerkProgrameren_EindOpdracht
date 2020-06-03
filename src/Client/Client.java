@@ -2,20 +2,23 @@ package Client;
 
 import java.net.*;
 import java.io.*;
+import java.util.Scanner;
 
 public class Client {
 
     public static void main(String[] args)throws IOException{
-        Socket s = new Socket("localhost", 4999);
+        Scanner scanner = new Scanner(System.in);
 
+        Socket s = new Socket("localhost", 6666);
+        System.out.println("connected");
         PrintWriter pr = new PrintWriter(s.getOutputStream());
-        pr.println("Hallo Stijn");
-        pr.flush();
 
         InputStreamReader in = new InputStreamReader(s.getInputStream());
         BufferedReader bf = new BufferedReader(in);
 
-        String tekst = bf.readLine();
-        System.out.println("Server : " + tekst);
+        while(true){
+            pr.write(scanner.nextLine());
+            pr.flush();
+        }
     }
 }
