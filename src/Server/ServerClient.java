@@ -1,47 +1,84 @@
 package Server;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ServerClient {
 
-    private ServerSocket serverSocket;
-    private DataInputStream dataInputStream;
-    private Socket socket;
+    private Socket socket1;
+    private Socket socket2;
+    private ServerSocket serverSocket1;
+    private ServerSocket serverSocket2;
+    private DataInputStream dataInputStream1;
+    private DataInputStream dataInputStream2;
+    private DataOutputStream dataOutputStream1;
+    private DataOutputStream dataOutputStream2;
 
     public ServerClient(int port) {
+        initServer(port);
+    }
+
+    public void initServer(int port){
         try {
-            serverSocket = new ServerSocket(port);
-            System.out.println("Server started");
-            socket = serverSocket.accept();
-            System.out.println("Connected");
+            serverSocket1 = new ServerSocket(port);
+            serverSocket2 = new ServerSocket(port + 1);
+            System.out.println("Servers started");
+            socket1 = serverSocket1.accept();
+            System.out.println("Connected: 1");
+            socket2 = serverSocket2.accept();
+            System.out.println("Connected: 2");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        dataInputStream = null;
+        dataInputStream1 = null;
+        dataInputStream2 = null;
 
-        if (socket != null) {
+        if (socket1 != null && socket2 != null) {
             try {
-                dataInputStream = new DataInputStream(
-                        new BufferedInputStream(socket.getInputStream()));
+                dataInputStream1 = new DataInputStream(new BufferedInputStream(socket1.getInputStream()));
+                dataInputStream2 = new DataInputStream(new BufferedInputStream(socket2.getInputStream()));
+                dataOutputStream1 = new DataOutputStream(new BufferedOutputStream(socket1.getOutputStream()));
+                dataOutputStream2 = new DataOutputStream(new BufferedOutputStream(socket2.getOutputStream()));
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        if (dataInputStream != null) {
-            while (true) {
-                try {
-                    String line = dataInputStream.readUTF();
-                    System.out.println(line);
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
+
+        Thread c1Thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    try {
+                        String line = dataInputStream1.readUTF();
+                        dataOutputStream2.writeUTF(line);
+                        dataOutputStream2.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        }
+        });
+
+        Thread c2Thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    try {
+                        String line = dataInputStream2.readUTF();
+                        dataOutputStream1.writeUTF(line);
+                        dataOutputStream1.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        c1Thread.start();
+        c2Thread.start();
     }
 
     public static void main(String[] args) {

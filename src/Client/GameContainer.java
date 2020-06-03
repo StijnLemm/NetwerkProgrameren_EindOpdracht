@@ -11,10 +11,18 @@ import javafx.scene.paint.Color;
 import javafx.scene.transform.Affine;
 import javafx.stage.Stage;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameContainer extends Application {
+
+    private DataInputStream dataInputStream;
+    private DataOutputStream dataOutputStream;
+
+    private boolean yourTurn;
 
     private List<Button> buttons;
     private AnimationTimer animationTimer;
@@ -22,6 +30,9 @@ public class GameContainer extends Application {
     private Canvas canvas;
     private Stage window;
     private Pen pen;
+
+    public GameContainer() {
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
