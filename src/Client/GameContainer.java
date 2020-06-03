@@ -206,8 +206,4 @@ public class GameContainer extends Application {
     public GraphicsContext getGraphicsContext() {
         return graphicsContext;
     }
-
-    public static void main(String[] args) {
-        launch(GameContainer.class);
-    }
 }

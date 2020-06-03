@@ -6,72 +6,106 @@ import java.net.Socket;
 
 public class ServerClient {
 
+    private Thread c1Thread;
+    private Thread c2Thread;
+    private boolean socket1IsConnected;
+    private boolean socket2IsConnected;
     private Socket socket1;
     private Socket socket2;
     private ServerSocket serverSocket1;
     private ServerSocket serverSocket2;
-    private DataInputStream dataInputStream1;
-    private DataInputStream dataInputStream2;
-    private DataOutputStream dataOutputStream1;
-    private DataOutputStream dataOutputStream2;
+    private ObjectInputStream objectInputStream1;
+    private ObjectOutputStream objectOutputStream1;
+    private ObjectInputStream objectInputStream2;
+    private ObjectOutputStream objectOutputStream2;
 
     public ServerClient(int port) {
-        initServer(port);
+        this.socket1IsConnected = false;
+        this.socket2IsConnected = false;
+        initConnection(port);
     }
 
-    public void initServer(int port){
+    public void initConnection(int port){
         try {
             serverSocket1 = new ServerSocket(port);
             serverSocket2 = new ServerSocket(port + 1);
             System.out.println("Servers started");
-            socket1 = serverSocket1.accept();
-            System.out.println("Connected: 1");
-            socket2 = serverSocket2.accept();
-            System.out.println("Connected: 2");
+
+            Thread socket1Thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        socket1 = serverSocket1.accept();
+                        System.out.println("Connected: 1");
+
+                        socket1IsConnected = true;
+                        initServer();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            Thread socket2Thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        socket2 = serverSocket2.accept();
+                        System.out.println("Connected: 2");
+
+                        socket2IsConnected = true;
+                        initServer();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            socket1Thread.start();
+            socket2Thread.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-        dataInputStream1 = null;
-        dataInputStream2 = null;
+    public void initServer(){
+
+        if(!socket1IsConnected || !socket2IsConnected){
+            return;
+        }
 
         if (socket1 != null && socket2 != null) {
             try {
-                dataInputStream1 = new DataInputStream(new BufferedInputStream(socket1.getInputStream()));
-                dataInputStream2 = new DataInputStream(new BufferedInputStream(socket2.getInputStream()));
-                dataOutputStream1 = new DataOutputStream(new BufferedOutputStream(socket1.getOutputStream()));
-                dataOutputStream2 = new DataOutputStream(new BufferedOutputStream(socket2.getOutputStream()));
-
+                objectInputStream1 = new ObjectInputStream(new BufferedInputStream(socket1.getInputStream()));
+                objectOutputStream1 = new ObjectOutputStream(new BufferedOutputStream(socket1.getOutputStream()));
+                objectInputStream2 = new ObjectInputStream(new BufferedInputStream(socket2.getInputStream()));
+                objectOutputStream2 = new ObjectOutputStream(new BufferedOutputStream(socket2.getOutputStream()));
+                System.out.println("Completed streams init");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        Thread c1Thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    try {
-                        String line = dataInputStream1.readUTF();
-                        dataOutputStream2.writeUTF(line);
-                        dataOutputStream2.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        c1Thread = new Thread(() -> {
+            while(true) {
+                try {
+                    objectOutputStream2.writeObject(objectInputStream1.readObject());
+                    objectOutputStream2.flush();
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
 
-                    }
                 }
             }
         });
 
-        Thread c2Thread = new Thread(new Runnable() {
+        c2Thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(true) {
                     try {
-                        String line = dataInputStream2.readUTF();
-                        dataOutputStream1.writeUTF(line);
-                        dataOutputStream1.flush();
-                    } catch (IOException e) {
+                        objectOutputStream1.writeObject(objectInputStream2.readObject());
+                        objectOutputStream1.flush();
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
                 }

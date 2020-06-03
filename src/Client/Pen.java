@@ -45,6 +45,18 @@ public class Pen {
         return width;
     }
 
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
     public void draw(GraphicsContext graphicsContext){
         graphicsContext.setFill(this.color);
         if(this.y > 100 + width/2.0) {

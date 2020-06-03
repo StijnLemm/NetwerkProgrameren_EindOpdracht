@@ -10,7 +10,7 @@ public class Client {
     private ObjectInputStream objectInputStream;
     private GameContainer gameContainer;
 
-    public Client(int port, GameContainer gameContainer) throws IOException {
+    public Client(int port, GameContainer gameContainer) throws IOException, ClassNotFoundException {
         this.gameContainer = gameContainer;
 
         Socket s = new Socket("localhost", port);
@@ -19,30 +19,26 @@ public class Client {
         objectOutputStream = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
         objectInputStream = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
 
-        int random =new Random().nextInt(10);
-        objectOutputStream.write(random);
-
-        this.gameContainer.setYourTurn(random > objectInputStream.read());
-
         input.start();
         output.start();
+        
+        System.out.println("Started threads");
     }
 
     private final Thread input = new Thread(new Runnable() {
         @Override
         public void run() {
+
             while (true) {
                 try {
 
                     if(gameContainer.isYourTurn()){
+
                         Pen pen = gameContainer.getPen();
-
-                        PenPackage penPackage = new PenPackage(gameContainer.getPen().)
-
+                        Object penPackage = new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor());
+                        objectOutputStream.writeObject(penPackage);
                     } else {
-
                         Object object = objectInputStream.readObject();
-
                         if(object instanceof PenPackage){
 
                             PenPackage penPackage = (PenPackage) object;
