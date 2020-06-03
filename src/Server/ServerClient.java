@@ -57,6 +57,7 @@ public class ServerClient {
                         dataOutputStream2.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
+
                     }
                 }
             }

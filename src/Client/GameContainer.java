@@ -19,9 +19,6 @@ import java.util.List;
 
 public class GameContainer extends Application {
 
-    private DataInputStream dataInputStream;
-    private DataOutputStream dataOutputStream;
-
     private boolean yourTurn;
 
     private List<Button> buttons;
@@ -36,6 +33,7 @@ public class GameContainer extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        this.yourTurn = false;
         this.initWindow(primaryStage);
         this.initToolBar();
         this.initPen();
@@ -72,11 +70,11 @@ public class GameContainer extends Application {
         this.buttons.add(new ColorCircle(550, 50, 40, Color.BLACK));
         this.buttons.add(new EraserButton("eraser.png", 610, 10, 80, 80));
 
-        this.graphicsContext.strokeOval(745,45,10,10);
+        this.graphicsContext.strokeOval(745, 45, 10, 10);
 
-        this.graphicsContext.translate(810,50);
-        this.graphicsContext.scale(5,5);
-        this.graphicsContext.fillText("Word",0, 0);
+        this.graphicsContext.translate(810, 50);
+        this.graphicsContext.scale(5, 5);
+        this.graphicsContext.fillText("Word", 0, 0);
         this.graphicsContext.setTransform(new Affine());
 
         for (Button button : this.buttons) {
@@ -88,74 +86,82 @@ public class GameContainer extends Application {
 
     private void initLoop() {
         canvas.setOnMouseDragged((event -> {
-            if (event.getY() > 100) {
-                this.pen.update(event.getX(), event.getY());
-                this.pen.draw(graphicsContext);
+            if (yourTurn) {
+                if (event.getY() > 100) {
+                    this.pen.update(event.getX(), event.getY());
+                    this.pen.draw(graphicsContext);
+                }
             }
         }));
 
         canvas.setOnMouseMoved((event -> {
-            if(event.getY() < 100){
-                for (Button button : this.buttons) {
-                    if (button.contains(new Point2D(event.getX(), event.getY())) && !button.isSelected()) {
-                        button.clear(this.graphicsContext);
-                        button.setHighlighted(true);
-                        button.draw(this.graphicsContext);
-                    } else if (button.isHighlighted() && !button.isSelected()) {
-                        button.clear(this.graphicsContext);
-                        button.setHighlighted(false);
-                        button.draw(this.graphicsContext);
+            if (yourTurn) {
+                if (event.getY() < 100) {
+                    for (Button button : this.buttons) {
+                        if (button.contains(new Point2D(event.getX(), event.getY())) && !button.isSelected()) {
+                            button.clear(this.graphicsContext);
+                            button.setHighlighted(true);
+                            button.draw(this.graphicsContext);
+                        } else if (button.isHighlighted() && !button.isSelected()) {
+                            button.clear(this.graphicsContext);
+                            button.setHighlighted(false);
+                            button.draw(this.graphicsContext);
+                        }
                     }
                 }
             }
         }));
 
         canvas.setOnMouseClicked((event -> {
-            if(event.getY() < 100){
-                for(Button button : this.buttons){
-                    if(button.contains(new Point2D(event.getX(), event.getY()))){
-                        button.clear(this.graphicsContext);
-                        button.setSelected(true);
-                        button.setHighlighted(false);
-                        button.draw(this.graphicsContext);
+            if (yourTurn) {
+                if (event.getY() < 100) {
+                    for (Button button : this.buttons) {
+                        if (button.contains(new Point2D(event.getX(), event.getY()))) {
+                            button.clear(this.graphicsContext);
+                            button.setSelected(true);
+                            button.setHighlighted(false);
+                            button.draw(this.graphicsContext);
 
-                        this.pen.setColor((Color)button.getColor());
+                            this.pen.setColor((Color) button.getColor());
 
-                        for(Button button1 : this.buttons){
-                            if(button1.isSelected() && button1 != button){
-                                button1.clear(this.graphicsContext);
-                                button1.setSelected(false);
-                                button1.draw(this.graphicsContext);
+                            for (Button button1 : this.buttons) {
+                                if (button1.isSelected() && button1 != button) {
+                                    button1.clear(this.graphicsContext);
+                                    button1.setSelected(false);
+                                    button1.draw(this.graphicsContext);
+                                }
                             }
                         }
                     }
+                } else {
+                    this.pen.update(event.getX(), event.getY());
+                    this.pen.draw(this.graphicsContext);
                 }
-            } else {
-                this.pen.update(event.getX(), event.getY());
-                this.pen.draw(this.graphicsContext);
             }
         }));
 
         canvas.setOnScroll((event -> {
+            if (yourTurn) {
 
-            this.graphicsContext.clearRect(700,0,96,96);
+                this.graphicsContext.clearRect(700, 0, 96, 96);
 
-            if(event.getDeltaY() < 40){
-                System.out.println("scroll! down");
-                if(this.pen.getWidth() > 4){
-                    this.pen.setWidth(this.pen.getWidth() - 2);
+                if (event.getDeltaY() < 40) {
+                    System.out.println("scroll! down");
+                    if (this.pen.getWidth() > 4) {
+                        this.pen.setWidth(this.pen.getWidth() - 2);
+                    }
+                } else {
+                    System.out.println("scroll! up");
+                    if (this.pen.getWidth() < 90) {
+                        this.pen.setWidth(this.pen.getWidth() + 2);
+                    }
                 }
-            } else {
-                System.out.println("scroll! up");
-                if(this.pen.getWidth() < 90){
-                    this.pen.setWidth(this.pen.getWidth() + 2);
-                }
+
+                this.graphicsContext.strokeOval(750 - (this.pen.getWidth() / 2.0),
+                        50 - (this.pen.getWidth() / 2.0),
+                        this.pen.getWidth(),
+                        this.pen.getWidth());
             }
-
-            this.graphicsContext.strokeOval(750 - (this.pen.getWidth() / 2.0),
-                    50 - (this.pen.getWidth() / 2.0),
-                    this.pen.getWidth(),
-                    this.pen.getWidth());
         }));
     }
 
@@ -163,26 +169,42 @@ public class GameContainer extends Application {
         this.pen = new Pen();
     }
 
-    private void clearToolbar(){
-        this.graphicsContext.clearRect(0,0, this.canvas.getWidth(), 100);
+    private void clearToolbar() {
+        this.graphicsContext.clearRect(0, 0, this.canvas.getWidth(), 100);
     }
 
-    private void drawToolbar(){
-        for(Button button : this.buttons){
+    private void drawToolbar() {
+        for (Button button : this.buttons) {
             button.draw(this.graphicsContext);
         }
 
         this.graphicsContext.strokeLine(0, 100, this.canvas.getWidth(), 100);
     }
 
-    private void setWord(String word){
+    private void setWord(String word) {
         this.clearToolbar();
         this.drawToolbar();
 
-        this.graphicsContext.translate(810,50);
-        this.graphicsContext.scale(5,5);
-        this.graphicsContext.fillText(word,0, 0);
+        this.graphicsContext.translate(810, 50);
+        this.graphicsContext.scale(5, 5);
+        this.graphicsContext.fillText(word, 0, 0);
         this.graphicsContext.setTransform(new Affine());
+    }
+
+    public boolean isYourTurn() {
+        return yourTurn;
+    }
+
+    public void setYourTurn(boolean yourTurn) {
+        this.yourTurn = yourTurn;
+    }
+
+    public Pen getPen() {
+        return pen;
+    }
+
+    public GraphicsContext getGraphicsContext() {
+        return graphicsContext;
     }
 
     public static void main(String[] args) {
