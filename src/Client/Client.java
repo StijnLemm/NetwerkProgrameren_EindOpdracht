@@ -1,6 +1,7 @@
 package Client;
 
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
 
 import java.net.*;
 import java.io.*;
@@ -9,6 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Client implements Runnable {
 
+    private boolean connected;
     private final int port;
     private boolean running;
     private CopyOnWriteArrayList<PenPackage> packages;
@@ -17,10 +19,11 @@ public class Client implements Runnable {
     private ObjectInputStream objectInputStream;
     private GameContainer gameContainer;
 
-    public Client(int port, GameContainer gameContainer) throws ClassNotFoundException, IOException {
+    public Client(int port, String ip, GameContainer gameContainer) throws ClassNotFoundException, IOException {
         this.gameContainer = gameContainer;
         this.port = port;
         this.packages = new CopyOnWriteArrayList<PenPackage>();
+        this.connected = false;
     }
 
     @Override
@@ -29,6 +32,12 @@ public class Client implements Runnable {
         try {
             Socket s = new Socket("localhost", port);
             System.out.println("connected");
+
+            this.connected = true;
+
+            Platform.runLater(() -> {
+                gameContainer.start();
+            });
 
             objectOutputStream = new ObjectOutputStream((s.getOutputStream()));
             System.out.println("init outputStream");
@@ -57,6 +66,12 @@ public class Client implements Runnable {
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Port niet aanwezig");
+                alert.setContentText("Verbinding geweigerd.");
+                alert.show();
+            });
         }
 
         input.start();
@@ -127,6 +142,10 @@ public class Client implements Runnable {
             }
         }
     });
+
+    public boolean isConnected() {
+        return connected;
+    }
 
     public void stop(){
         this.running = false;

@@ -1,22 +1,16 @@
 package Client;
 
-import javafx.animation.AnimationTimer;
-import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToolBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.transform.Affine;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -24,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GameContainer extends Application {
+public class GameContainer {
 
     private AtomicBoolean yourTurn;
 
@@ -40,34 +34,32 @@ public class GameContainer extends Application {
     private Stage window;
     private Pen pen;
 
-    public GameContainer() {
+    public GameContainer(Stage primaryStage) {
+        this.window = primaryStage;
+        this.initVar();
+    }
+
+    public void start(){
+        this.initWindow();
+        this.initStartScreen();
+
+        this.setupTimer();
+        this.initPen();
+        this.initLoop();
+    }
+
+    public void initVar() {
         this.yourTurn = new AtomicBoolean();
         this.guessWord = "";
         this.impact = new Font("Impact", 60);
     }
 
-    @Override
-    public void start(Stage primaryStage) {
-        this.initWindow(primaryStage);
-
-        try {
-            this.client = new Client(6667, this);
-            new Thread(client).start();
-            System.out.println("client init success!");
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        this.initPen();
-        this.initLoop();
-    }
-
-    private void initWindow(Stage window) {
+    private void initWindow() {
         this.canvas = new Canvas();
         this.graphicsContext = canvas.getGraphicsContext2D();
         this.getGraphicsContext().setFont(impact);
 
-        this.window = window;
+        this.window.setResizable(false);
 
         this.canvas.widthProperty().bind(this.window.widthProperty());
         this.canvas.heightProperty().bind(this.window.heightProperty());
@@ -75,8 +67,12 @@ public class GameContainer extends Application {
         this.mainPane = new BorderPane();
         this.mainPane.setCenter(this.canvas);
 
-        this.window.setScene(new Scene(mainPane));
+        this.window.setScene(new Scene(mainPane, 1200, 600));
         this.window.show();
+    }
+
+    private void initStartScreen(){
+
     }
 
     private void initToolBar() {
@@ -95,7 +91,7 @@ public class GameContainer extends Application {
 
         this.graphicsContext.strokeOval(745, 45, 10, 10);
 
-        this.graphicsContext.fillText("Word", 810, 50);
+        this.graphicsContext.fillText("Televisie", 810, 50);
 
 
         for (Button button : this.buttons) {
@@ -106,14 +102,7 @@ public class GameContainer extends Application {
     }
 
     private void initGuessBar() {
-        ToolBar toolBar = new ToolBar();
-        TextField guessInputField = new TextField();
-        toolBar.getItems().add(guessInputField);
-        guessInputField.setText("HELLOOOO WORLD!");
-        this.mainPane.setTop(toolBar);
-        this.window.setScene(new Scene(mainPane));
-        this.window.show();
-
+        this.graphicsContext.strokeLine(0, 100, this.canvas.getWidth(), 100);
     }
 
     private void initLoop() {
@@ -205,9 +194,11 @@ public class GameContainer extends Application {
                     if (event.getCode() == KeyCode.BACK_SPACE && guessWord.length() != 0) {
                         guessWord = guessWord.substring(0, guessWord.length()-1);
                         updateGuess(guessWord);
-                    } else if (event.getCode() == KeyCode.ENTER) {
+                    } else if (event.getCode() == KeyCode.ENTER && guessWord.length() > 0) {
 
-                    } else {
+
+
+                    } else if (guessWord.length() < 15){
                         if(guessWord.length() > 0) {
                             guessWord = guessWord + event.getText();
                         } else {
@@ -224,8 +215,16 @@ public class GameContainer extends Application {
         }));
     }
 
+    private void setupTimer(){
+        this.graphicsContext.fillText("120", canvas.getWidth()- 100, 60);
+    }
+
     private void initPen() {
-        this.pen = new Pen(client);
+        this.pen = new Pen();
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 
     public void drawPen() {
@@ -248,15 +247,11 @@ public class GameContainer extends Application {
         this.clearToolbar();
         this.drawToolbar();
 
-        this.graphicsContext.translate(810, 50);
-        this.graphicsContext.scale(5, 5);
-        this.graphicsContext.fillText(word, 0, 0);
-        this.graphicsContext.setTransform(new Affine());
+        this.graphicsContext.fillText(word, 810, 60);
     }
 
     private void updateGuess(String word) {
-        this.clearToolbar();
-        System.out.println("UPDATE guess word:" + word);
+        this.graphicsContext.clearRect(0,0,canvas.getWidth() - 100, 90);
         Text guess = new Text(word);
         guess.setFont(impact);
         this.getGraphicsContext().fillText(word, (canvas.getWidth() / 2.0) - (guess.getLayoutBounds().getWidth() / 2.0), 80);

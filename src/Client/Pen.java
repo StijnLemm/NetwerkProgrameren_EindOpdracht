@@ -8,15 +8,13 @@ import java.util.Objects;
 
 public class Pen {
 
-    private Client client;
-
     private double x;
     private double y;
     private int width;
     private Color color;
     private boolean isClearing;
 
-    public Pen(Client client) {
+    public Pen() {
         this.x = 0;
         this.y = 0;
         this.width = 10;
