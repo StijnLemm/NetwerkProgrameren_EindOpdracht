@@ -51,7 +51,7 @@ public class GameContainer extends Application {
         this.initWindow(primaryStage);
 
         try {
-            this.client = new Client(6667, this);
+            this.client = new Client(6666, this);
             new Thread(client).start();
             System.out.println("client init success!");
         } catch (IOException | ClassNotFoundException e) {
