@@ -10,6 +10,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Affine;
 import javafx.stage.Stage;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,6 +19,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GameContainer extends Application {
 
     private AtomicBoolean yourTurn;
+
+    private Client client;
 
     private List<Button> buttons;
     private AnimationTimer animationTimer;
@@ -33,9 +37,17 @@ public class GameContainer extends Application {
     public void start(Stage primaryStage) throws Exception {
         this.initWindow(primaryStage);
         this.initToolBar();
+
+        try {
+            this.client = new Client(6666, this);
+            new Thread(client).start();
+            System.out.println("client init success!");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         this.initPen();
         this.initLoop();
-        System.out.println("your turn:" + yourTurn);
     }
 
     private void initWindow(Stage window) {
@@ -88,6 +100,7 @@ public class GameContainer extends Application {
                 if (event.getY() > 100) {
                     this.pen.update(event.getX(), event.getY());
                     this.pen.draw(graphicsContext);
+                    this.client.setPen(this.pen);
                 }
             }
         }));
@@ -134,6 +147,7 @@ public class GameContainer extends Application {
                 } else {
                     this.pen.update(event.getX(), event.getY());
                     this.pen.draw(this.graphicsContext);
+                    this.client.setPen(this.pen);
                 }
             }
         }));
@@ -164,7 +178,11 @@ public class GameContainer extends Application {
     }
 
     private void initPen() {
-        this.pen = new Pen();
+        this.pen = new Pen(client);
+    }
+
+    public void drawPen(){
+        this.pen.draw(this.graphicsContext);
     }
 
     private void clearToolbar() {

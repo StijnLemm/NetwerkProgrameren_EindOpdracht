@@ -4,7 +4,11 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
+import java.util.Objects;
+
 public class Pen {
+
+    private Client client;
 
     private double x;
     private double y;
@@ -12,7 +16,7 @@ public class Pen {
     private Color color;
     private boolean isClearing;
 
-    public Pen() {
+    public Pen(Client client) {
         this.x = 0;
         this.y = 0;
         this.width = 10;
@@ -63,5 +67,19 @@ public class Pen {
             graphicsContext.fillOval(x - width / 2.0, y - width / 2.0, width, width);
         }
         graphicsContext.setFill(Color.BLACK);
+    }
+
+    public boolean hasEqualAttributes(Pen pen) {
+        if (null == pen) return false;
+        return Double.compare(pen.x, x) == 0 &&
+                Double.compare(pen.y, y) == 0 &&
+                width == pen.width &&
+                isClearing == pen.isClearing &&
+                color.equals(pen.color);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, width, color, isClearing);
     }
 }
