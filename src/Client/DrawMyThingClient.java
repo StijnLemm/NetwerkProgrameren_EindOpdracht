@@ -13,17 +13,16 @@ public class DrawMyThingClient {
 
     public DrawMyThingClient() {
         this.gameContainer = new GameContainer();
-
         try {
             Client client = new Client(6667, gameContainer);
             System.out.println("client init success!");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        launch(GameContainer.class);
     }
 
     public static void main(String[] args) {
         DrawMyThingClient drawMyThingClient = new DrawMyThingClient();
+        launch(GameContainer.class);
     }
 }

@@ -10,16 +10,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Affine;
 import javafx.stage.Stage;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameContainer extends Application {
 
-    private boolean yourTurn;
+    private AtomicBoolean yourTurn;
 
     private List<Button> buttons;
     private AnimationTimer animationTimer;
@@ -29,15 +26,16 @@ public class GameContainer extends Application {
     private Pen pen;
 
     public GameContainer() {
+        yourTurn = new AtomicBoolean();
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        this.yourTurn = false;
         this.initWindow(primaryStage);
         this.initToolBar();
         this.initPen();
         this.initLoop();
+        System.out.println("your turn:" + yourTurn);
     }
 
     private void initWindow(Stage window) {
@@ -86,7 +84,7 @@ public class GameContainer extends Application {
 
     private void initLoop() {
         canvas.setOnMouseDragged((event -> {
-            if (yourTurn) {
+            if (yourTurn.get()) {
                 if (event.getY() > 100) {
                     this.pen.update(event.getX(), event.getY());
                     this.pen.draw(graphicsContext);
@@ -95,7 +93,7 @@ public class GameContainer extends Application {
         }));
 
         canvas.setOnMouseMoved((event -> {
-            if (yourTurn) {
+            if (yourTurn.get()) {
                 if (event.getY() < 100) {
                     for (Button button : this.buttons) {
                         if (button.contains(new Point2D(event.getX(), event.getY())) && !button.isSelected()) {
@@ -113,7 +111,7 @@ public class GameContainer extends Application {
         }));
 
         canvas.setOnMouseClicked((event -> {
-            if (yourTurn) {
+            if (yourTurn.get()) {
                 if (event.getY() < 100) {
                     for (Button button : this.buttons) {
                         if (button.contains(new Point2D(event.getX(), event.getY()))) {
@@ -141,7 +139,7 @@ public class GameContainer extends Application {
         }));
 
         canvas.setOnScroll((event -> {
-            if (yourTurn) {
+            if (yourTurn.get()) {
 
                 this.graphicsContext.clearRect(700, 0, 96, 96);
 
@@ -192,11 +190,12 @@ public class GameContainer extends Application {
     }
 
     public boolean isYourTurn() {
-        return yourTurn;
+        return yourTurn.get();
     }
 
     public void setYourTurn(boolean yourTurn) {
-        this.yourTurn = yourTurn;
+        System.out.println("setting yourTurn: " + yourTurn);
+        this.yourTurn.set(yourTurn);
     }
 
     public Pen getPen() {

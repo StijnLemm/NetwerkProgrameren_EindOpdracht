@@ -10,18 +10,35 @@ public class Client {
     private ObjectInputStream objectInputStream;
     private GameContainer gameContainer;
 
-    public Client(int port, GameContainer gameContainer) throws IOException, ClassNotFoundException {
+    public Client(int port, GameContainer gameContainer) throws ClassNotFoundException, IOException {
         this.gameContainer = gameContainer;
 
         Socket s = new Socket("localhost", port);
         System.out.println("connected");
 
-        objectOutputStream = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
-        objectInputStream = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
+        try {
+            objectOutputStream = new ObjectOutputStream((s.getOutputStream()));
+            System.out.println("init outputStream");
+            objectInputStream = new ObjectInputStream((s.getInputStream()));
+            System.out.println("init inputStream");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int random = new Random().nextInt(10);
+        objectOutputStream.writeObject(String.valueOf(random));
+        System.out.println("Writing..: " + random);
+
+        int amountReceived = Integer.parseInt((String)objectInputStream.readObject());
+        System.out.println("amount received..: " + amountReceived);
+
+        if(amountReceived < random){
+            this.gameContainer.setYourTurn(true);
+            System.out.println("YOUR TURN!");
+        }
 
         input.start();
         output.start();
-        
         System.out.println("Started threads");
     }
 
@@ -35,8 +52,10 @@ public class Client {
                     if(gameContainer.isYourTurn()){
 
                         Pen pen = gameContainer.getPen();
-                        Object penPackage = new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor());
-                        objectOutputStream.writeObject(penPackage);
+                        if(pen != null) {
+                            Object penPackage = new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor());
+                            objectOutputStream.writeObject(penPackage);
+                        }
                     } else {
                         Object object = objectInputStream.readObject();
                         if(object instanceof PenPackage){

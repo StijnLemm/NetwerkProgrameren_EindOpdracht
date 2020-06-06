@@ -76,10 +76,10 @@ public class ServerClient {
 
         if (socket1 != null && socket2 != null) {
             try {
-                objectInputStream1 = new ObjectInputStream(new BufferedInputStream(socket1.getInputStream()));
-                objectOutputStream1 = new ObjectOutputStream(new BufferedOutputStream(socket1.getOutputStream()));
-                objectInputStream2 = new ObjectInputStream(new BufferedInputStream(socket2.getInputStream()));
-                objectOutputStream2 = new ObjectOutputStream(new BufferedOutputStream(socket2.getOutputStream()));
+                objectInputStream1 = new ObjectInputStream(socket1.getInputStream());
+                objectOutputStream1 = new ObjectOutputStream(socket1.getOutputStream());
+                objectInputStream2 = new ObjectInputStream(socket2.getInputStream());
+                objectOutputStream2 = new ObjectOutputStream(socket2.getOutputStream());
                 System.out.println("Completed streams init");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -90,6 +90,7 @@ public class ServerClient {
             while(true) {
                 try {
                     objectOutputStream2.writeObject(objectInputStream1.readObject());
+                    System.out.println("OBJECT SEND SOCKET 1 -> SOCKET 2");
                     objectOutputStream2.flush();
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
@@ -98,16 +99,14 @@ public class ServerClient {
             }
         });
 
-        c2Thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    try {
-                        objectOutputStream1.writeObject(objectInputStream2.readObject());
-                        objectOutputStream1.flush();
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
+        c2Thread = new Thread(() -> {
+            while(true) {
+                try {
+                    objectOutputStream1.writeObject(objectInputStream2.readObject());
+                    System.out.println("OBJECT SEND SOCKET 2 -> SOCKET 1");
+                    objectOutputStream1.flush();
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
             }
         });
