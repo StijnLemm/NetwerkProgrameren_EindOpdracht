@@ -104,6 +104,27 @@ public class Client implements Runnable {
                         String message = (String) object;
                         if (message.contains("GUESS")) {
 
+                            String guess = message.substring(6);
+
+                            System.out.println(guess);
+
+                            if(guess.toLowerCase().equals(gameContainer.getDrawWord().toLowerCase())){
+                                Platform.runLater(() -> {
+                                    gameContainer.setYourTurn(true);
+                                });
+                                sendMsg("CORRECT");
+
+                            } else {
+                                sendMsg("WRONG");
+                            }
+
+                        } else if (message.contains("MSG")) {
+                            if(message.contains("RECEIVED: CORRECT")){
+                                System.out.println("CORRECT!");
+                                Platform.runLater(() -> {
+                                    gameContainer.setYourTurn(true);
+                                });
+                            }
                         }
                     }
 
@@ -116,10 +137,6 @@ public class Client implements Runnable {
             }
         }
     });
-
-    public void sendPackage(Pen pen) {
-        this.packages.add(new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor()));
-    }
 
     private final Thread output = new Thread(new Runnable() {
         @Override
@@ -142,6 +159,31 @@ public class Client implements Runnable {
             }
         }
     });
+
+    public void sendPackage(Pen pen) {
+        this.packages.add(new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor()));
+    }
+
+    public void sendGuess(String guess) {
+        String message = "GUESS:" + guess;
+        try {
+            this.objectOutputStream.writeObject(message);
+            this.objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMsg(String msg){
+        System.out.println("SENDING: " + msg);
+        String message = "MSG:" + msg;
+        try {
+            this.objectOutputStream.writeObject(message);
+            this.objectOutputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public boolean isConnected() {
         return connected;

@@ -50,8 +50,6 @@ public class StartScreen extends Application {
                 gameContainer.setClient(client);
                 new Thread(client).start();
 
-                gameContainer.start();
-
                 System.out.println("client init success!");
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
