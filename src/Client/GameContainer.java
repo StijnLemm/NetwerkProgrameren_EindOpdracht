@@ -2,12 +2,20 @@ package Client;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToolBar;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Affine;
 import javafx.stage.Stage;
 
@@ -22,24 +30,28 @@ public class GameContainer extends Application {
 
     private Client client;
 
+    private String guessWord;
+
+    private Font impact;
+    private BorderPane mainPane;
     private List<Button> buttons;
-    private AnimationTimer animationTimer;
     private GraphicsContext graphicsContext;
     private Canvas canvas;
     private Stage window;
     private Pen pen;
 
     public GameContainer() {
-        yourTurn = new AtomicBoolean();
+        this.yourTurn = new AtomicBoolean();
+        this.guessWord = "";
+        this.impact = new Font("Impact", 60);
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         this.initWindow(primaryStage);
-        this.initToolBar();
 
         try {
-            this.client = new Client(6666, this);
+            this.client = new Client(6667, this);
             new Thread(client).start();
             System.out.println("client init success!");
         } catch (IOException | ClassNotFoundException e) {
@@ -53,14 +65,15 @@ public class GameContainer extends Application {
     private void initWindow(Stage window) {
         this.canvas = new Canvas();
         this.graphicsContext = canvas.getGraphicsContext2D();
+        this.getGraphicsContext().setFont(impact);
 
         this.window = window;
 
         this.canvas.widthProperty().bind(this.window.widthProperty());
         this.canvas.heightProperty().bind(this.window.heightProperty());
 
-        BorderPane mainPane = new BorderPane();
-        mainPane.setCenter(this.canvas);
+        this.mainPane = new BorderPane();
+        this.mainPane.setCenter(this.canvas);
 
         this.window.setScene(new Scene(mainPane));
         this.window.show();
@@ -82,10 +95,8 @@ public class GameContainer extends Application {
 
         this.graphicsContext.strokeOval(745, 45, 10, 10);
 
-        this.graphicsContext.translate(810, 50);
-        this.graphicsContext.scale(5, 5);
-        this.graphicsContext.fillText("Word", 0, 0);
-        this.graphicsContext.setTransform(new Affine());
+        this.graphicsContext.fillText("Word", 810, 50);
+
 
         for (Button button : this.buttons) {
             button.draw(this.graphicsContext);
@@ -94,13 +105,24 @@ public class GameContainer extends Application {
         //this.setWord("Banaan");
     }
 
+    private void initGuessBar() {
+        ToolBar toolBar = new ToolBar();
+        TextField guessInputField = new TextField();
+        toolBar.getItems().add(guessInputField);
+        guessInputField.setText("HELLOOOO WORLD!");
+        this.mainPane.setTop(toolBar);
+        this.window.setScene(new Scene(mainPane));
+        this.window.show();
+
+    }
+
     private void initLoop() {
         canvas.setOnMouseDragged((event -> {
             if (yourTurn.get()) {
                 if (event.getY() > 100) {
                     this.pen.update(event.getX(), event.getY());
                     this.pen.draw(graphicsContext);
-                    this.client.setPen(this.pen);
+                    this.client.sendPackage(this.pen);
                 }
             }
         }));
@@ -147,7 +169,7 @@ public class GameContainer extends Application {
                 } else {
                     this.pen.update(event.getX(), event.getY());
                     this.pen.draw(this.graphicsContext);
-                    this.client.setPen(this.pen);
+                    this.client.sendPackage(this.pen);
                 }
             }
         }));
@@ -158,7 +180,6 @@ public class GameContainer extends Application {
                 this.graphicsContext.clearRect(700, 0, 96, 96);
 
                 if (event.getDeltaY() < 40) {
-                    System.out.println("scroll! down");
                     if (this.pen.getWidth() > 4) {
                         this.pen.setWidth(this.pen.getWidth() - 2);
                     }
@@ -175,13 +196,39 @@ public class GameContainer extends Application {
                         this.pen.getWidth());
             }
         }));
+
+        window.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                System.out.println(event.getText());
+                if (!yourTurn.get()) {
+                    if (event.getCode() == KeyCode.BACK_SPACE && guessWord.length() != 0) {
+                        guessWord = guessWord.substring(0, guessWord.length()-1);
+                        updateGuess(guessWord);
+                    } else if (event.getCode() == KeyCode.ENTER) {
+
+                    } else {
+                        if(guessWord.length() > 0) {
+                            guessWord = guessWord + event.getText();
+                        } else {
+                            guessWord = event.getText();
+                        }
+                        updateGuess(guessWord);
+                    }
+                }
+            }
+        });
+
+        window.setOnCloseRequest((event -> {
+            client.stop();
+        }));
     }
 
     private void initPen() {
         this.pen = new Pen(client);
     }
 
-    public void drawPen(){
+    public void drawPen() {
         this.pen.draw(this.graphicsContext);
     }
 
@@ -207,13 +254,25 @@ public class GameContainer extends Application {
         this.graphicsContext.setTransform(new Affine());
     }
 
+    private void updateGuess(String word) {
+        this.clearToolbar();
+        System.out.println("UPDATE guess word:" + word);
+        Text guess = new Text(word);
+        guess.setFont(impact);
+        this.getGraphicsContext().fillText(word, (canvas.getWidth() / 2.0) - (guess.getLayoutBounds().getWidth() / 2.0), 80);
+    }
+
     public boolean isYourTurn() {
         return yourTurn.get();
     }
 
     public void setYourTurn(boolean yourTurn) {
-        System.out.println("setting yourTurn: " + yourTurn);
         this.yourTurn.set(yourTurn);
+        if (yourTurn) {
+            this.initToolBar();
+        } else {
+            this.initGuessBar();
+        }
     }
 
     public Pen getPen() {

@@ -1,16 +1,17 @@
 package Client;
 
-import sun.security.util.Pem;
+import javafx.application.Platform;
 
 import java.net.*;
 import java.io.*;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-public class Client implements   Runnable {
+public class Client implements Runnable {
 
     private final int port;
-
-    private Pen pen;
+    private boolean running;
+    private CopyOnWriteArrayList<PenPackage> packages;
 
     private ObjectOutputStream objectOutputStream;
     private ObjectInputStream objectInputStream;
@@ -19,11 +20,12 @@ public class Client implements   Runnable {
     public Client(int port, GameContainer gameContainer) throws ClassNotFoundException, IOException {
         this.gameContainer = gameContainer;
         this.port = port;
-        this.pen = null;
+        this.packages = new CopyOnWriteArrayList<PenPackage>();
     }
 
     @Override
     public void run() {
+        running = true;
         try {
             Socket s = new Socket("localhost", port);
             System.out.println("connected");
@@ -46,7 +48,9 @@ public class Client implements   Runnable {
                 System.out.println("amount received..: " + amountReceived);
 
                 if (amountReceived < random) {
-                    this.gameContainer.setYourTurn(true);
+                    Platform.runLater(() -> {
+                        this.gameContainer.setYourTurn(true);
+                    });
                     System.out.println("YOUR TURN!");
                 }
             } while (random == amountReceived);
@@ -64,73 +68,67 @@ public class Client implements   Runnable {
         @Override
         public void run() {
 
-            while (true) {
+            while (running) {
                 try {
+                    Object object = objectInputStream.readObject();
+                    if (object instanceof PenPackage) {
 
-                    if(gameContainer.isYourTurn()){
+                        PenPackage penPackage = (PenPackage) object;
 
-                            if(pen != null) {
-                                Object penPackage = new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor());
-                                objectOutputStream.writeObject(penPackage);
-                            }
+                        Pen updatePen = gameContainer.getPen();
 
-                            pen = null;
+                        updatePen.update(penPackage.x, penPackage.y);
+                        updatePen.setWidth(penPackage.width);
+                        updatePen.setColor(penPackage.getColor());
 
-                    } else {
-                        Object object = objectInputStream.readObject();
-                        if(object instanceof PenPackage){
-
-                            PenPackage penPackage = (PenPackage) object;
-
-                            Pen updatePen = gameContainer.getPen();
-
-                            updatePen.update(penPackage.x, penPackage.y);
-                            updatePen.setWidth(penPackage.width);
-                            updatePen.setColor(penPackage.getColor());
-
+                        Platform.runLater(() -> {
                             gameContainer.drawPen();
+                        });
 
-                        } else if (object instanceof String){
+                    } else if (object instanceof String) {
+                        String message = (String) object;
+                        if (message.contains("GUESS")) {
 
                         }
-//                        if(line.contains("C")){
-//                            line = line.substring(1);
-//
-//                            int x = 0;
-//                            int y = 0;
-//
-//                            for (int i = 0; i < line.length(); i++) {
-//                                if(line.charAt(i) == ':'){
-//                                    x = Integer.parseInt(line.substring(0, i-1));
-//                                    y = Integer.parseInt(line.substring(i + 1));
-//                                }
-//                            }
-//
-//                            gameContainer.getPen().update(x, y);
-//                            gameContainer.getPen().draw(gameContainer.getGraphicsContext());
-//                        }
                     }
-                } catch (IOException | ClassNotFoundException e) {
+
+                    Thread.sleep(5);
+
+                } catch (IOException | ClassNotFoundException | InterruptedException e) {
                     e.printStackTrace();
                 }
+
             }
         }
     });
 
-    public void setPen(Pen pen){
-        this.pen = pen;
+    public void sendPackage(Pen pen) {
+        this.packages.add(new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor()));
     }
 
     private final Thread output = new Thread(new Runnable() {
         @Override
         public void run() {
-            while (true) {
+            while (running) {
                 try {
-                    objectOutputStream.flush();
-                } catch (IOException e) {
+                    if(gameContainer.isYourTurn()){
+
+                        if(!packages.isEmpty()) {
+                            objectOutputStream.writeObject(packages.remove(packages.size()-1));
+                            objectOutputStream.flush();
+                        }
+
+                        Thread.sleep(5);
+                    }
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
+
             }
         }
     });
+
+    public void stop(){
+        this.running = false;
+    }
 }

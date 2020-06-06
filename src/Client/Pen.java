@@ -62,20 +62,14 @@ public class Pen {
     }
 
     public void draw(GraphicsContext graphicsContext){
+
         graphicsContext.setFill(this.color);
+
         if(this.y > 100 + width/2.0) {
             graphicsContext.fillOval(x - width / 2.0, y - width / 2.0, width, width);
         }
-        graphicsContext.setFill(Color.BLACK);
-    }
 
-    public boolean hasEqualAttributes(Pen pen) {
-        if (null == pen) return false;
-        return Double.compare(pen.x, x) == 0 &&
-                Double.compare(pen.y, y) == 0 &&
-                width == pen.width &&
-                isClearing == pen.isClearing &&
-                color.equals(pen.color);
+        graphicsContext.setFill(Color.BLACK);
     }
 
     @Override

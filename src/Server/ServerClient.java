@@ -90,11 +90,10 @@ public class ServerClient {
             while(true) {
                 try {
                     objectOutputStream2.writeObject(objectInputStream1.readObject());
-                    System.out.println("OBJECT SEND SOCKET 1 -> SOCKET 2");
                     objectOutputStream2.flush();
-                } catch (IOException | ClassNotFoundException e) {
+                    Thread.sleep(5);
+                } catch (IOException | ClassNotFoundException | InterruptedException e) {
                     e.printStackTrace();
-
                 }
             }
         });
@@ -103,9 +102,9 @@ public class ServerClient {
             while(true) {
                 try {
                     objectOutputStream1.writeObject(objectInputStream2.readObject());
-                    System.out.println("OBJECT SEND SOCKET 2 -> SOCKET 1");
                     objectOutputStream1.flush();
-                } catch (IOException | ClassNotFoundException e) {
+                    Thread.sleep(5);
+                } catch (IOException | ClassNotFoundException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
