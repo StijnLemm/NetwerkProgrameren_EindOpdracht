@@ -110,7 +110,7 @@ public class Client implements Runnable {
 
                             if(guess.toLowerCase().equals(gameContainer.getDrawWord().toLowerCase())){
                                 Platform.runLater(() -> {
-                                    gameContainer.setYourTurn(true);
+                                    gameContainer.setYourTurn(false);
                                 });
                                 sendMsg("CORRECT");
 
@@ -119,8 +119,8 @@ public class Client implements Runnable {
                             }
 
                         } else if (message.contains("MSG")) {
-                            if(message.contains("RECEIVED: CORRECT")){
-                                System.out.println("CORRECT!");
+                            if(message.contains("CORRECT")){
+                                System.out.println("RECEIVED: CORRECT!");
                                 Platform.runLater(() -> {
                                     gameContainer.setYourTurn(true);
                                 });
