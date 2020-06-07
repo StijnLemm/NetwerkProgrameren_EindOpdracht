@@ -1,13 +1,16 @@
 package Client;
 
-import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -25,13 +28,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameContainer {
 
-    private AtomicBoolean yourTurn;
 
     private Client client;
 
     private String guessWord;
 
     private String drawWord;
+
+    private boolean yourTurn;
+    private boolean started;
 
     private Font impact;
     private BorderPane mainPane;
@@ -46,19 +51,18 @@ public class GameContainer {
         this.initVar();
     }
 
-    public void start(){
+    public void start() {
         this.initWindow();
         this.initStartScreen();
-
-        this.setupTimer();
         this.initPen();
         this.initLoop();
     }
 
     public void initVar() {
-        this.yourTurn = new AtomicBoolean();
+        this.yourTurn = false;
         this.guessWord = "";
         this.drawWord = "";
+        this.started = false;
         this.impact = new Font("Impact", 60);
     }
 
@@ -73,14 +77,16 @@ public class GameContainer {
         this.canvas.heightProperty().bind(this.window.heightProperty());
 
         this.mainPane = new BorderPane();
+        this.mainPane.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
         this.mainPane.setCenter(this.canvas);
 
         this.window.setScene(new Scene(mainPane, 1200, 600));
         this.window.show();
     }
 
-    private void initStartScreen(){
-
+    private void initStartScreen() {
+        this.updateGuess("Wachten op andere spelers!");
+        makeButtonStartEnd("Opnieuw invoeren?", Color.GREEN);
     }
 
     private void initToolBar() {
@@ -107,11 +113,12 @@ public class GameContainer {
         for (Button button : this.buttons) {
             button.draw(this.graphicsContext);
         }
-
         //this.setWord("Banaan");
     }
 
     private void initGuessBar() {
+        this.guessWord = "";
+        this.updateGuess("");
         this.graphicsContext.strokeLine(0, 100, this.canvas.getWidth(), 100);
     }
 
@@ -120,7 +127,7 @@ public class GameContainer {
         System.out.println("INIT HANDLERS");
 
         canvas.setOnMouseDragged((event -> {
-            if (yourTurn.get()) {
+            if (yourTurn) {
                 if (event.getY() > 100) {
                     this.pen.update(event.getX(), event.getY());
                     this.pen.draw(graphicsContext);
@@ -130,7 +137,7 @@ public class GameContainer {
         }));
 
         canvas.setOnMouseMoved((event -> {
-            if (yourTurn.get()) {
+            if (yourTurn) {
                 if (event.getY() < 100) {
                     for (Button button : this.buttons) {
                         if (button.contains(new Point2D(event.getX(), event.getY())) && !button.isSelected()) {
@@ -148,7 +155,7 @@ public class GameContainer {
         }));
 
         canvas.setOnMouseClicked((event -> {
-            if (yourTurn.get()) {
+            if (yourTurn) {
                 if (event.getY() < 100) {
                     for (Button button : this.buttons) {
                         if (button.contains(new Point2D(event.getX(), event.getY()))) {
@@ -174,10 +181,23 @@ public class GameContainer {
                     this.client.sendPackage(this.pen);
                 }
             }
+
+            if (!started) {
+                if(points == -1) {
+                    client.stop(false);
+                    StartScreen startScreen = new StartScreen();
+                    startScreen.setVar(false, "");
+                    startScreen.start(window);
+                } else {
+                    StartScreen startScreen = new StartScreen();
+                    startScreen.setVar(true, this.client.getIp());
+                    startScreen.start(window);
+                }
+            }
         }));
 
         canvas.setOnScroll((event -> {
-            if (yourTurn.get()) {
+            if (yourTurn) {
 
                 this.graphicsContext.clearRect(700, 0, 96, 96);
 
@@ -200,17 +220,16 @@ public class GameContainer {
         }));
 
         window.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            System.out.println(event.getText());
-            if (!yourTurn.get()) {
+            if (!yourTurn && started) {
                 if (event.getCode() == KeyCode.BACK_SPACE && guessWord.length() != 0) {
-                    guessWord = guessWord.substring(0, guessWord.length()-1);
+                    guessWord = guessWord.substring(0, guessWord.length() - 1);
                     updateGuess(guessWord);
                 } else if (event.getCode() == KeyCode.ENTER && guessWord.length() > 0) {
 
                     this.client.sendGuess(guessWord);
 
-                } else if (guessWord.length() < 15){
-                    if(guessWord.length() > 0) {
+                } else if (guessWord.length() < 15) {
+                    if (guessWord.length() > 0) {
                         guessWord = guessWord + event.getText();
                     } else {
                         guessWord = event.getText();
@@ -221,19 +240,87 @@ public class GameContainer {
         });
 
         window.setOnCloseRequest((event -> {
-            client.stop();
+            client.stop(true);
         }));
     }
 
-    private void setupTimer(){
-        this.graphicsContext.fillText("120", canvas.getWidth()- 100, 60);
+    private GameTimer gameTimer;
+
+    public void setupTimer() {
+        //updateTimer(120);
+        this.gameTimer = new GameTimer(this);
+        new Thread(gameTimer).start();
+    }
+
+    public void updateTimer(int secondsLeft) {
+        this.graphicsContext.clearRect(canvas.getWidth() - 100, 0, 100, 90);
+        this.graphicsContext.fillText(String.valueOf(secondsLeft), canvas.getWidth() - 100, 60);
+    }
+
+    private int points = -1;
+
+    public void noMoreTimeLeft() {
+        this.started = false;
+        this.yourTurn = false;
+
+        this.clearScreen();
+
+        this.updateGuess("De tijd is over! Aantal punten: " + points);
+
+        makeButtonStartEnd("Klik op het scherm om opnieuw te spelen", Color.GREEN);
+    }
+
+    private void makeButtonStartEnd(String msg, Color color) {
+        Text text = new Text(msg);
+        text.setFont(impact);
+        this.graphicsContext.setFill(color);
+        this.graphicsContext.fillRect(((this.canvas.getWidth() / 2.0) - ((text.getLayoutBounds().getWidth() / 2.0) + 20)),
+                (this.canvas.getHeight() / 2.0) - 55,
+                text.getLayoutBounds().getWidth() + 40,
+                80);
+
+        this.graphicsContext.setFill(Color.WHITE);
+        this.graphicsContext.fillText(msg, (this.canvas.getWidth() / 2.0) - (text.getLayoutBounds().getWidth() / 2.0),
+                (this.canvas.getHeight() / 2.0) + 10);
+        this.graphicsContext.setFill(Color.BLACK);
+        this.graphicsContext.strokeRect(((this.canvas.getWidth() / 2.0) - ((text.getLayoutBounds().getWidth() / 2.0) + 20)),
+                (this.canvas.getHeight() / 2.0) - 55,
+                text.getLayoutBounds().getWidth() + 40,
+                80);
+    }
+
+    public void restart() throws IOException, ClassNotFoundException {
+        this.points = -1;
+        this.started = false;
+        //this.client.stop();
+        this.client.getRandomTurn();
+        this.client.start();
+    }
+
+    public void onDisconnect() {
+        System.out.println("ON DISCONNECTED");
+        this.points = -1;
+        this.yourTurn = false;
+        this.started = false;
+        this.gameTimer.stop();
+        this.clearScreen();
+        updateGuess("Tegenstander heeft het spel verlaten!");
+        makeButtonStartEnd("klik op het scherm om terug te gaan.", Color.BLUE);
     }
 
     private void initPen() {
         this.pen = new Pen();
     }
 
-    private String getRandomWord(String jsonFileLocation){
+    public boolean isStarted() {
+        return started;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    private String getRandomWord(String jsonFileLocation) {
         JsonReader reader = Json.createReader(getClass().getResourceAsStream(jsonFileLocation));
         JsonObject jsonObject = reader.readObject();
         JsonArray jsonValues = jsonObject.getJsonArray("words");
@@ -268,30 +355,34 @@ public class GameContainer {
     }
 
     private void updateGuess(String word) {
-        this.graphicsContext.clearRect(0,0,canvas.getWidth() - 100, 90);
+        this.graphicsContext.clearRect(0, 0, canvas.getWidth() - 100, 90);
         Text guess = new Text(word);
         guess.setFont(impact);
         this.getGraphicsContext().fillText(word, (canvas.getWidth() / 2.0) - (guess.getLayoutBounds().getWidth() / 2.0), 80);
     }
 
     public boolean isYourTurn() {
-        return yourTurn.get();
+        return yourTurn;
     }
 
     public void setYourTurn(boolean yourTurn) {
-        this.yourTurn.set(yourTurn);
+        this.yourTurn = yourTurn;
 
         this.clearScreen();
+        this.pen.setDefaults();
 
         if (yourTurn) {
             this.initToolBar();
         } else {
             this.initGuessBar();
         }
+
+        this.points++;
+        this.started = true;
     }
 
-    private void clearScreen(){
-        this.graphicsContext.clearRect(0,0, this.canvas.getWidth(), this.canvas.getHeight());
+    private void clearScreen() {
+        this.graphicsContext.clearRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
     }
 
     public String getDrawWord() {

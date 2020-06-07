@@ -14,15 +14,36 @@ import java.io.IOException;
 
 public class StartScreen extends Application {
 
+    private boolean replay;
+    private String ip;
+
+    public void setVar(boolean replay, String ip){
+        this.replay = replay;
+        if(replay){
+            this.ip = ip;
+        }
+    }
+
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
+        if(replay){
+            try {
+                GameContainer gameContainer = new GameContainer(primaryStage);
+                Client client = new Client(DrawMyThingClient.port, ip, gameContainer);
+                gameContainer.setClient(client);
+                new Thread(client).start();
+
+                System.out.println("client init success!");
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
         HBox hBox = new HBox();
-        Label port = new Label("Port:");
-        TextField inputPort = new TextField();
         Label ip = new Label("IP:");
         TextField inputIP = new TextField();
 
-        hBox.getChildren().addAll(port, inputPort, ip, inputIP);
+        hBox.getChildren().addAll(ip, inputIP);
 
         VBox vBox = new VBox();
 
@@ -32,21 +53,9 @@ public class StartScreen extends Application {
 
         connectButton.setOnAction((event -> {
 
-            int portNumber;
-
-            try{
-                portNumber = Integer.parseInt(inputPort.getText());
-            } catch (NumberFormatException e){
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Invoer niet correct");
-                alert.setContentText("De port kan alleen bestaan uit cijfers.");
-                alert.show();
-                return;
-            }
-
             try {
                 GameContainer gameContainer = new GameContainer(primaryStage);
-                Client client = new Client(portNumber, inputIP.getText(), gameContainer);
+                Client client = new Client(DrawMyThingClient.port, inputIP.getText(), gameContainer);
                 gameContainer.setClient(client);
                 new Thread(client).start();
 

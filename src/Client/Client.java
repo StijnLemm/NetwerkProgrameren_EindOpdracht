@@ -10,9 +10,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Client implements Runnable {
 
+    private boolean replay;
+    private boolean replayReceived;
     private boolean connected;
     private final int port;
     private boolean running;
+    private String ip;
+
+    private Socket s;
+
     private CopyOnWriteArrayList<PenPackage> packages;
 
     private ObjectOutputStream objectOutputStream;
@@ -22,15 +28,17 @@ public class Client implements Runnable {
     public Client(int port, String ip, GameContainer gameContainer) throws ClassNotFoundException, IOException {
         this.gameContainer = gameContainer;
         this.port = port;
+        this.ip = ip;
         this.packages = new CopyOnWriteArrayList<PenPackage>();
         this.connected = false;
+        this.replay = false;
+        this.replayReceived = false;
     }
 
     @Override
     public void run() {
-        running = true;
         try {
-            Socket s = new Socket("localhost", port);
+            this.s = new Socket(ip, port);
             System.out.println("connected");
 
             this.connected = true;
@@ -45,24 +53,9 @@ public class Client implements Runnable {
             objectInputStream = new ObjectInputStream((s.getInputStream()));
             System.out.println("init inputStream");
 
-            int amountReceived = 0;
-            int random = 0;
+            getRandomTurn();
 
-            do {
-                random = new Random().nextInt(10);
-                objectOutputStream.writeObject(String.valueOf(random));
-                System.out.println("Writing..: " + random);
-
-                amountReceived = Integer.parseInt((String) objectInputStream.readObject());
-                System.out.println("amount received..: " + amountReceived);
-
-                if (amountReceived < random) {
-                    Platform.runLater(() -> {
-                        this.gameContainer.setYourTurn(true);
-                    });
-                    System.out.println("YOUR TURN!");
-                }
-            } while (random == amountReceived);
+            this.gameContainer.setupTimer();
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -74,91 +67,210 @@ public class Client implements Runnable {
             });
         }
 
-        input.start();
-        output.start();
+        running = true;
+        getInput().start();
+        getOutput().start();
         System.out.println("Started threads");
     }
 
-    private final Thread input = new Thread(new Runnable() {
-        @Override
-        public void run() {
+//    private final Thread input = new Thread(new Runnable() {
+//        @Override
+//        public void run() {
+//
+//            while (running) {
+//                System.out.println("input");
+//                try {
+//                    Object object = objectInputStream.readObject();
+//                    if (object instanceof PenPackage) {
+//
+//                        PenPackage penPackage = (PenPackage) object;
+//
+//                        Pen updatePen = gameContainer.getPen();
+//
+//                        updatePen.update(penPackage.x, penPackage.y);
+//                        updatePen.setWidth(penPackage.width);
+//                        updatePen.setColor(penPackage.getColor());
+//
+//                        Platform.runLater(() -> {
+//                            gameContainer.drawPen();
+//                        });
+//
+//                    } else if (object instanceof String) {
+//                        String message = (String) object;
+//                        if (message.contains("GUESS")) {
+//
+//                            String guess = message.substring(6);
+//
+//                            System.out.println(guess);
+//
+//                            if(guess.toLowerCase().equals(gameContainer.getDrawWord().toLowerCase())){
+//                                Platform.runLater(() -> {
+//                                    gameContainer.setYourTurn(false);
+//                                });
+//                                sendMsg("CORRECT");
+//
+//                            } else {
+//                                sendMsg("WRONG");
+//                            }
+//
+//                        } else if (message.contains("MSG")) {
+//                            System.out.println(message);
+//                            if(message.contains("CORRECT")){
+//                                System.out.println("RECEIVED: CORRECT!");
+//                                Platform.runLater(() -> {
+//                                    gameContainer.setYourTurn(true);
+//                                });
+//                            } else if (message.contains("REPLAY")) {
+//
+//                                System.out.println("replay boolean: " + replay);
+//                                System.out.println("replayReceived boolean: " + replayReceived);
+//
+//                                if(replay){
+//                                    gameContainer.restart();
+//                                }
+//                                replayReceived = true;
+//                            }
+//                        }
+//                    }
+//
+//                    Thread.sleep(5);
+//
+//                } catch (IOException | ClassNotFoundException | InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
+//        }
+//    });
 
-            while (running) {
-                try {
-                    Object object = objectInputStream.readObject();
-                    if (object instanceof PenPackage) {
+//    private final Thread output = new Thread(new Runnable() {
+//        @Override
+//        public void run() {
+//            while (running) {
+//                System.out.println("output");
+//                try {
+//                    if(gameContainer.isYourTurn()){
+//
+//                        if(!packages.isEmpty()) {
+//                            objectOutputStream.writeObject(packages.remove(packages.size()-1));
+//                            objectOutputStream.flush();
+//                        }
+//                        Thread.sleep(5);
+//                    }
+//                } catch (IOException | InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
+//        }
+//    });
 
-                        PenPackage penPackage = (PenPackage) object;
+    public void getRandomTurn() throws IOException, ClassNotFoundException {
 
-                        Pen updatePen = gameContainer.getPen();
+        int amountReceived = 0;
+        int random = 0;
 
-                        updatePen.update(penPackage.x, penPackage.y);
-                        updatePen.setWidth(penPackage.width);
-                        updatePen.setColor(penPackage.getColor());
+        do {
+            random = new Random().nextInt(10);
+            objectOutputStream.writeObject(String.valueOf(random));
+            System.out.println("Writing..: " + random);
 
-                        Platform.runLater(() -> {
-                            gameContainer.drawPen();
-                        });
+            amountReceived = Integer.parseInt((String) objectInputStream.readObject());
+            System.out.println("amount received..: " + amountReceived);
 
-                    } else if (object instanceof String) {
-                        String message = (String) object;
-                        if (message.contains("GUESS")) {
-
-                            String guess = message.substring(6);
-
-                            System.out.println(guess);
-
-                            if(guess.toLowerCase().equals(gameContainer.getDrawWord().toLowerCase())){
-                                Platform.runLater(() -> {
-                                    gameContainer.setYourTurn(false);
-                                });
-                                sendMsg("CORRECT");
-
-                            } else {
-                                sendMsg("WRONG");
-                            }
-
-                        } else if (message.contains("MSG")) {
-                            if(message.contains("CORRECT")){
-                                System.out.println("RECEIVED: CORRECT!");
-                                Platform.runLater(() -> {
-                                    gameContainer.setYourTurn(true);
-                                });
-                            }
-                        }
-                    }
-
-                    Thread.sleep(5);
-
-                } catch (IOException | ClassNotFoundException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+            if (amountReceived < random) {
+                Platform.runLater(() -> {
+                    this.gameContainer.setYourTurn(true);
+                });
+                System.out.println("YOUR TURN!");
+            } else {
+                Platform.runLater(() -> {
+                    this.gameContainer.setYourTurn(false);
+                });
             }
-        }
-    });
+        } while (random == amountReceived);
+    }
 
-    private final Thread output = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (running) {
-                try {
-                    if(gameContainer.isYourTurn()){
-
-                        if(!packages.isEmpty()) {
-                            objectOutputStream.writeObject(packages.remove(packages.size()-1));
+    private Thread getOutput() {
+        return new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (running) {
+                    try {
+                        if (!packages.isEmpty()) {
+                            objectOutputStream.writeObject(packages.remove(packages.size() - 1));
                             objectOutputStream.flush();
                         }
-
-                        Thread.sleep(5);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        gameContainer.onDisconnect();
+                        return;
                     }
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
 
+                }
             }
-        }
-    });
+        });
+    }
+
+    private Thread getInput() {
+        return new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (running) {
+                    try {
+                        Object object = objectInputStream.readObject();
+                        if (object instanceof PenPackage) {
+
+                            PenPackage penPackage = (PenPackage) object;
+                            Pen updatePen = gameContainer.getPen();
+
+                            updatePen.update(penPackage.x, penPackage.y);
+                            updatePen.setWidth(penPackage.width);
+                            updatePen.setColor(penPackage.getColor());
+
+                            Platform.runLater(() -> {
+                                gameContainer.drawPen();
+                            });
+
+                        } else if (object instanceof String) {
+                            String message = (String) object;
+                            if (message.contains("GUESS")) {
+
+                                String guess = message.substring(6);
+
+                                System.out.println(guess);
+
+                                if (guess.toLowerCase().equals(gameContainer.getDrawWord().toLowerCase())) {
+                                    Platform.runLater(() -> {
+                                        gameContainer.setYourTurn(false);
+                                    });
+                                    sendMsg("CORRECT");
+
+                                } else {
+                                    sendMsg("WRONG");
+                                }
+
+                            } else if (message.contains("MSG")) {
+                                System.out.println(message);
+                                if (message.contains("CORRECT")) {
+                                    System.out.println("RECEIVED: CORRECT!");
+                                    Platform.runLater(() -> {
+                                        gameContainer.setYourTurn(true);
+                                    });
+                                } else if (message.contains("DISCONNECT")){
+                                    stop(false);
+                                    gameContainer.onDisconnect();
+                                }
+                            }
+                        }
+                    } catch (IOException | ClassNotFoundException e) {
+                        gameContainer.onDisconnect();
+                        return;
+                    }
+                }
+            }
+        });
+    }
 
     public void sendPackage(Pen pen) {
         this.packages.add(new PenPackage(pen.getX(), pen.getY(), pen.getWidth(), pen.getColor()));
@@ -174,7 +286,7 @@ public class Client implements Runnable {
         }
     }
 
-    public void sendMsg(String msg){
+    public void sendMsg(String msg) {
         System.out.println("SENDING: " + msg);
         String message = "MSG:" + msg;
         try {
@@ -185,11 +297,25 @@ public class Client implements Runnable {
         }
     }
 
-    public boolean isConnected() {
-        return connected;
+    public String getIp() {
+        return ip;
     }
 
-    public void stop(){
+    public void stop(boolean sendMsg) {
         this.running = false;
+        if(sendMsg) sendMsg("DISCONNECT");
+        try {
+            this.s.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("STOP THREADS");
+    }
+
+    public void start() {
+        System.out.println("START THREADS");
+        running = true;
+        getInput().start();
+        getOutput().start();
     }
 }

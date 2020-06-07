@@ -91,8 +91,7 @@ public class ServerClient {
                 try {
                     objectOutputStream2.writeObject(objectInputStream1.readObject());
                     objectOutputStream2.flush();
-                    Thread.sleep(5);
-                } catch (IOException | ClassNotFoundException | InterruptedException e) {
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }
@@ -103,8 +102,7 @@ public class ServerClient {
                 try {
                     objectOutputStream1.writeObject(objectInputStream2.readObject());
                     objectOutputStream1.flush();
-                    Thread.sleep(5);
-                } catch (IOException | ClassNotFoundException | InterruptedException e) {
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }

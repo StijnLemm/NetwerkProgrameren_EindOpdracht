@@ -70,6 +70,12 @@ public class Pen {
         graphicsContext.setFill(Color.BLACK);
     }
 
+    public void setDefaults(){
+        this.width = 10;
+        this.color = Color.BLACK;
+        this.isClearing = false;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(x, y, width, color, isClearing);

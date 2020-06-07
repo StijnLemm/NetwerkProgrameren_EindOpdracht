@@ -59,6 +59,7 @@ public class ColorCircle extends Circle implements Button {
                     super.getCenterY() - super.getRadius(),
                     2 * super.getRadius(),
                     2 * super.getRadius());
+            graphicsContext.setLineWidth(1);
         }
     }
 
