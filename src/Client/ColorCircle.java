@@ -21,6 +21,10 @@ public class ColorCircle extends Circle implements Button {
         isHighlighted = highlighted;
     }
 
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+
     public boolean isHighlighted() {
         return isHighlighted;
     }
@@ -29,12 +33,15 @@ public class ColorCircle extends Circle implements Button {
         return isSelected;
     }
 
-    public void setSelected(boolean selected) {
-        isSelected = selected;
-    }
-
     public Paint getColor(){
         return super.getFill();
+    }
+
+    public void clear(GraphicsContext graphicsContext) {
+        graphicsContext.clearRect(super.getCenterX() - super.getRadius() - this.strokeWidth,
+                super.getCenterY() - super.getRadius() - this.strokeWidth,
+                2 * super.getRadius() + 2 * this.strokeWidth,
+                2 * super.getRadius() + 2 * this.strokeWidth);
     }
 
     public void draw(GraphicsContext graphicsContext) {
@@ -61,12 +68,5 @@ public class ColorCircle extends Circle implements Button {
                     2 * super.getRadius());
             graphicsContext.setLineWidth(1);
         }
-    }
-
-    public void clear(GraphicsContext graphicsContext) {
-        graphicsContext.clearRect(super.getCenterX() - super.getRadius() - this.strokeWidth,
-                super.getCenterY() - super.getRadius() - this.strokeWidth,
-                2 * super.getRadius() + 2 * this.strokeWidth,
-                2 * super.getRadius() + 2 * this.strokeWidth);
     }
 }

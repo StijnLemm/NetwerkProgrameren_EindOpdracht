@@ -27,7 +27,7 @@ public class ServerGui extends Application {
 
         stopServer.setOnAction((event -> {
             if(multClientServer.isRunning()){
-                multClientServer.setRunning(false);
+                multClientServer.stop();
             }
         }));
 
@@ -35,17 +35,18 @@ public class ServerGui extends Application {
         HBox hBox = new HBox(startServer, stopServer);
 
         textArea = new TextArea();
+        textArea.setEditable(false);
 
         borderPane.setTop(hBox);
 
         borderPane.setCenter(textArea);
 
+        primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(borderPane, 400, 800));
         primaryStage.show();
     }
 
     public void printLogLine(String line){
-        System.out.println("print: " + line);
         this.textArea.setText(this.textArea.getText() + "\n" + line);
     }
 

@@ -4,8 +4,8 @@ public class GameTimer implements Runnable {
 
     public static final int time = 120;
 
+    private final GameContainer gameContainer;
     private boolean running;
-    private GameContainer gameContainer;
 
     public GameTimer(GameContainer gameContainer) {
         this.gameContainer = gameContainer;

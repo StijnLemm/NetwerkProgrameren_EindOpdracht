@@ -2,7 +2,6 @@ package Client;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -27,16 +26,11 @@ public class StartScreen extends Application {
     @Override
     public void start(Stage primaryStage) {
         if(replay){
-            try {
-                GameContainer gameContainer = new GameContainer(primaryStage);
-                Client client = new Client(DrawMyThingClient.port, ip, gameContainer);
-                gameContainer.setClient(client);
-                new Thread(client).start();
-
-                System.out.println("client init success!");
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            GameContainer gameContainer = new GameContainer(primaryStage);
+            Client client = new Client(DrawMyThingClient.port, ip, gameContainer);
+            gameContainer.setClient(client);
+            new Thread(client).start();
+            return;
         }
 
         HBox hBox = new HBox();
@@ -52,17 +46,10 @@ public class StartScreen extends Application {
         connectButton.setText("Play!");
 
         connectButton.setOnAction((event -> {
-
-            try {
-                GameContainer gameContainer = new GameContainer(primaryStage);
-                Client client = new Client(DrawMyThingClient.port, inputIP.getText(), gameContainer);
-                gameContainer.setClient(client);
-                new Thread(client).start();
-
-                System.out.println("client init success!");
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            GameContainer gameContainer = new GameContainer(primaryStage);
+            Client client = new Client(DrawMyThingClient.port, inputIP.getText(), gameContainer);
+            gameContainer.setClient(client);
+            new Thread(client).start();
         }));
 
         vBox.getChildren().addAll(hBox, connectButton);

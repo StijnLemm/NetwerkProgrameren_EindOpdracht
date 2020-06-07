@@ -1,6 +1,5 @@
 package Client;
 
-import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -22,14 +21,6 @@ public class Pen {
         this.isClearing = false;
     }
 
-    public void setClearing(boolean clearing) {
-        isClearing = clearing;
-    }
-
-    public boolean isClearing() {
-        return isClearing;
-    }
-
     public void setColor(Color color) {
         this.color = color;
     }
@@ -41,6 +32,12 @@ public class Pen {
 
     public void setWidth(int amount){
         this.width = amount;
+    }
+
+    public void setDefaults(){
+        this.width = 10;
+        this.color = Color.BLACK;
+        this.isClearing = false;
     }
 
     public int getWidth() {
@@ -68,12 +65,6 @@ public class Pen {
         }
 
         graphicsContext.setFill(Color.BLACK);
-    }
-
-    public void setDefaults(){
-        this.width = 10;
-        this.color = Color.BLACK;
-        this.isClearing = false;
     }
 
     @Override

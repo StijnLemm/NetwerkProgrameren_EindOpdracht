@@ -1,55 +1,48 @@
 package Server;
 
-import javafx.application.Platform;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import static javafx.application.Application.launch;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MultClientServer {
 
-    private ServerGui serverGui;
 
-    private CopyOnWriteArrayList<Socket> sockets;
-    private int port;
+    private final List<LinkThread> linkThreads;
+    private final List<Socket> sockets;
+    private final ServerGui serverGui;
+    private final int port;
     private boolean running;
+
     private ServerSocket serverSocket;
 
     public MultClientServer(int port, ServerGui serverGui) {
         this.port = port;
         this.serverGui = serverGui;
         this.running = false;
-        this.sockets = new CopyOnWriteArrayList<>();
+        this.linkThreads = new ArrayList<>();
+        this.sockets = new ArrayList<>();
     }
 
-    public void start(){
+    public void start() {
         try {
             running = true;
             serverSocket = new ServerSocket(port);
             serverGui.printLogLine("Server started!");
 
             new Thread(() -> {
-                while (running){
+                while (running) {
                     try {
                         Socket socket = serverSocket.accept();
                         sockets.add(socket);
-                        Platform.runLater(() -> {
-                            serverGui.printLogLine("accepted socket: " + socket.getInetAddress());
-                        });
-                        if(sockets.size() >= 2){
-                            new LinkThread(sockets.remove(0), sockets.remove(0));
-                            Platform.runLater(() -> {
+                        serverGui.printLogLine("accepted socket: " + socket.getInetAddress());
+                        if (sockets.size() >= 2) {
+                            linkThreads.add(new LinkThread(sockets.remove(0), sockets.remove(0)));
                             serverGui.printLogLine("successfully init LinkThread");
-                            });
                         }
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        running = false;
-                    }
+                    } catch (IOException e) {}
                 }
             }).start();
 
@@ -58,9 +51,22 @@ public class MultClientServer {
         }
     }
 
-    public void setRunning(boolean running) {
-        this.running = running;
-        
+    public void stop() {
+
+        this.running = false;
+
+        for(LinkThread linkThread : linkThreads){
+            linkThread.sendServerStop();
+            linkThread.setRunning(false);
+        }
+
+        try {
+            this.serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        this.serverGui.printLogLine("Stopping server..");
     }
 
     public boolean isRunning() {
