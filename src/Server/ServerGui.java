@@ -8,6 +8,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
+/**
+ * This class starts the ServerGUI in this GUI will be the possibility to start or stop the server.
+ * The GUI will also log the information about what events are going on in the textfield of the GUI for example: "Server started..."
+ */
+
 public class ServerGui extends Application {
 
     private TextArea textArea;
@@ -46,6 +51,10 @@ public class ServerGui extends Application {
         primaryStage.show();
     }
 
+    /**
+     * This method is used to print lines on the logfield in the ServerGUI
+     * @param line
+     */
     public void printLogLine(String line){
         this.textArea.setText(this.textArea.getText() + "\n" + line);
     }

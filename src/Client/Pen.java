@@ -5,6 +5,10 @@ import javafx.scene.paint.Color;
 
 import java.util.Objects;
 
+/**
+ * This class is used to initialize the pen and to reset it when the drawer turn gets changed.
+ */
+
 public class Pen {
 
     private double x;
@@ -12,6 +16,7 @@ public class Pen {
     private int width;
     private Color color;
     private boolean isClearing;
+
 
     public Pen() {
         this.x = 0;
@@ -25,6 +30,11 @@ public class Pen {
         this.color = color;
     }
 
+    /**
+     * This method updates the coordinates of the pen.
+     * @param x
+     * @param y
+     */
     public void update(double x, double y){
         this.x = x;
         this.y = y;
@@ -34,6 +44,9 @@ public class Pen {
         this.width = amount;
     }
 
+    /**
+     * This method is used to put the pen back on its default settings.
+     */
     public void setDefaults(){
         this.width = 10;
         this.color = Color.BLACK;

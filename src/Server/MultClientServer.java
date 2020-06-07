@@ -6,6 +6,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class runs the server, its a multi client server because this server class makes it possible to log in for 2 people on the same port.
+ * This class will also print information about what is going on with the server on the logfield in the ServerGUI.
+ */
+
 public class MultClientServer {
 
 
@@ -25,6 +30,9 @@ public class MultClientServer {
         this.sockets = new ArrayList<>();
     }
 
+    /**
+     * This method starts the server and will also print information to the logfield of the ServerGUI
+     */
     public void start() {
         try {
             running = true;
@@ -51,6 +59,9 @@ public class MultClientServer {
         }
     }
 
+    /**
+     * This method will stop the server and will also print on the logfield of the ServerGUI when the server stopped.
+     */
     public void stop() {
 
         this.running = false;
@@ -69,6 +80,10 @@ public class MultClientServer {
         this.serverGui.printLogLine("Stopping server..");
     }
 
+    /**
+     * This method will return the value of th boolean running in true or false which can be used to stop Threads from looping.
+     * @return
+     */
     public boolean isRunning() {
         return running;
     }

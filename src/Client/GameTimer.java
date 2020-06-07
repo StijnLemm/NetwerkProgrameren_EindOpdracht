@@ -1,5 +1,10 @@
 package Client;
 
+/**
+ * This class is used to run the timer of the game, this timer is set on 120 seconds (2 minutes).
+ * The timer will be shown on the screen while the game is running.
+ */
+
 public class GameTimer implements Runnable {
 
     public static final int time = 120;
@@ -11,6 +16,9 @@ public class GameTimer implements Runnable {
         this.gameContainer = gameContainer;
     }
 
+    /**
+     * This method runs and updates the game timer.
+     */
     @Override
     public void run() {
 
@@ -30,6 +38,9 @@ public class GameTimer implements Runnable {
         }
     }
 
+    /**
+     * This method is used to stop Threads.
+     */
     public void stop(){
         running = false;
     }

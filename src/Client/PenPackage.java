@@ -4,6 +4,12 @@ import javafx.scene.paint.Color;
 
 import java.io.Serializable;
 
+/**
+ * This class will update the width of the pen that is selected with the scroll wheel of the mouse.
+ * It will also update the coordinates of the pen and the color that is selected by the user.
+ * This information about the pen can only be changed and used by the person that is on turn to draw.
+ */
+
 public class PenPackage implements Serializable {
 
     double x;
