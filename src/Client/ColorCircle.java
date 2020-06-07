@@ -11,32 +11,39 @@ public class ColorCircle extends Circle implements Button {
     private boolean isHighlighted;
     private boolean isSelected;
 
+
     public ColorCircle(double centerX, double centerY, double radius, Paint fill) {
         super(centerX, centerY, radius, fill);
         this.isHighlighted = false;
         this.isSelected = false;
     }
 
+    @Override
     public void setHighlighted(boolean highlighted) {
         isHighlighted = highlighted;
     }
 
+    @Override
     public void setSelected(boolean selected) {
         isSelected = selected;
     }
 
+    @Override
     public boolean isHighlighted() {
         return isHighlighted;
     }
 
+    @Override
     public boolean isSelected() {
         return isSelected;
     }
 
+    @Override
     public Paint getColor(){
         return super.getFill();
     }
 
+    @Override
     public void clear(GraphicsContext graphicsContext) {
         graphicsContext.clearRect(super.getCenterX() - super.getRadius() - this.strokeWidth,
                 super.getCenterY() - super.getRadius() - this.strokeWidth,
@@ -44,6 +51,7 @@ public class ColorCircle extends Circle implements Button {
                 2 * super.getRadius() + 2 * this.strokeWidth);
     }
 
+    @Override
     public void draw(GraphicsContext graphicsContext) {
         graphicsContext.setFill(super.getFill());
 

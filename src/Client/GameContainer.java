@@ -49,6 +49,9 @@ public class GameContainer {
         this.initVar();
     }
 
+    /**
+     * Call all the initializers.
+     */
     public void start() {
         this.initWindow();
         this.initStartScreen();
@@ -56,6 +59,9 @@ public class GameContainer {
         this.initHandlers();
     }
 
+    /**
+     * initialising variables.
+     */
     public void initVar() {
         this.yourTurn = false;
         this.started = false;
@@ -65,6 +71,9 @@ public class GameContainer {
         this.impact = new Font("Impact", 60);
     }
 
+    /**
+     * init javafx graphicContext and canvas onto the stage.
+     */
     private void initWindow() {
         this.canvas = new Canvas();
 
@@ -84,23 +93,30 @@ public class GameContainer {
         this.window.show();
     }
 
+    /**
+     * init screen view for StartScreen.
+     */
     private void initStartScreen() {
         this.updateGuess("Wachten op andere spelers!");
         makeButtonStartEnd("Opnieuw invoeren?", Color.GREEN);
     }
 
+    /**
+     * init the toolbar.
+     */
     private void initToolBar() {
         this.graphicsContext.strokeLine(0, 100, this.canvas.getWidth(), 100);
 
-        this.buttons = new ArrayList<>();
-
-        this.buttons.add(new ColorCircle(50, 50, 40, Color.YELLOW));
-        this.buttons.add(new ColorCircle(150, 50, 40, Color.RED));
-        this.buttons.add(new ColorCircle(250, 50, 40, Color.BLUE));
-        this.buttons.add(new ColorCircle(350, 50, 40, Color.BROWN));
-        this.buttons.add(new ColorCircle(450, 50, 40, Color.GREEN));
-        this.buttons.add(new ColorCircle(550, 50, 40, Color.BLACK));
-        this.buttons.add(new EraserButton("eraser.png", 610, 10, 80, 80));
+        if(this.buttons == null) {
+            this.buttons = new ArrayList<>();
+            this.buttons.add(new ColorCircle(50, 50, 40, Color.YELLOW));
+            this.buttons.add(new ColorCircle(150, 50, 40, Color.RED));
+            this.buttons.add(new ColorCircle(250, 50, 40, Color.BLUE));
+            this.buttons.add(new ColorCircle(350, 50, 40, Color.BROWN));
+            this.buttons.add(new ColorCircle(450, 50, 40, Color.GREEN));
+            this.buttons.add(new ColorCircle(550, 50, 40, Color.BLACK));
+            this.buttons.add(new EraserButton("eraser.png", 610, 10, 80, 80));
+        }
 
         this.graphicsContext.strokeOval(745, 45, 10, 10);
 
@@ -113,12 +129,19 @@ public class GameContainer {
         }
     }
 
+    /**
+     * init the bar to type your guess.
+     */
     private void initGuessBar() {
         this.guessWord = "";
         this.updateGuess("");
         this.graphicsContext.strokeLine(0, 100, this.canvas.getWidth(), 100);
     }
 
+    /**
+     * init the callbacks from mouse and key pressed, these callbacks will update
+     * the game.
+     */
     private void initHandlers() {
         canvas.setOnMouseDragged((event -> {
             if (yourTurn) {
@@ -242,6 +265,9 @@ public class GameContainer {
         this.pen = new Pen();
     }
 
+    /**
+     * this method will init a thread which will update the timer each second.
+     */
     public void setupTimer() {
         this.gameTimer = new GameTimer(this);
         new Thread(gameTimer).start();
@@ -251,6 +277,10 @@ public class GameContainer {
         this.client = client;
     }
 
+    /**
+     * This method will set the turn, it will call the right toolbar after.
+     * @param yourTurn true = your turn, false = not your turn.
+     */
     public void setYourTurn(boolean yourTurn) {
         this.yourTurn = yourTurn;
 
@@ -267,6 +297,9 @@ public class GameContainer {
         this.started = true;
     }
 
+    /**
+     * This method is called whenever the client receives the disconnect msg.
+     */
     public void onDisconnect() {
         this.points = -1;
         this.yourTurn = false;
@@ -277,6 +310,9 @@ public class GameContainer {
         makeButtonStartEnd("klik op het scherm om terug te gaan.", Color.BLUE);
     }
 
+    /**
+     * This method is called whenever the client receives the server stop msg.
+     */
     public void onServerStop(){
         this.points = -1;
         this.yourTurn = false;
@@ -287,6 +323,11 @@ public class GameContainer {
         makeButtonStartEnd("klik op het scherm om terug te gaan.", Color.BLUE);
     }
 
+    /**
+     * this method will clear the top right part of the screen to update the time left,
+     * the method will be called from the GameTimer thread.
+     * @param secondsLeft
+     */
     public void updateTimer(int secondsLeft) {
         if(this.started) {
             this.graphicsContext.clearRect(canvas.getWidth() - 100, 0, 100, 90);
@@ -294,6 +335,11 @@ public class GameContainer {
         }
     }
 
+    /**
+     * This methode will clear the toolbar, it will determine the right coords
+     * to place the text in the middle of the x from canvas.
+     * @param word the current guess.
+     */
     private void updateGuess(String word) {
         this.graphicsContext.clearRect(0, 0, canvas.getWidth() - 100, 90);
         Text guess = new Text(word);
@@ -309,6 +355,9 @@ public class GameContainer {
         this.graphicsContext.clearRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
     }
 
+    /**
+     * This method is called when the GameTimer is out of seconds.
+     */
     public void noMoreTimeLeft() {
         this.started = false;
         this.yourTurn = false;
@@ -320,6 +369,11 @@ public class GameContainer {
         this.makeButtonStartEnd("Klik op het scherm om opnieuw te spelen", Color.GREEN);
     }
 
+    /**
+     * This method generates a button in the center of the canvas.
+     * @param msg message to come with the button.
+     * @param color collor of the button.
+     */
     private void makeButtonStartEnd(String msg, Color color) {
         Text text = new Text(msg);
         text.setFont(impact);
@@ -339,6 +393,11 @@ public class GameContainer {
                 80);
     }
 
+    /**
+     * This method will pull a random word from the words json.
+     * @param jsonFileLocation location of the .json.
+     * @return random word to draw.
+     */
     private String getRandomWord(String jsonFileLocation) {
         JsonReader reader = Json.createReader(getClass().getResourceAsStream(jsonFileLocation));
         JsonObject jsonObject = reader.readObject();

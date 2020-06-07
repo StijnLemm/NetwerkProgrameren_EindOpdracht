@@ -46,6 +46,10 @@ public class ServerGui extends Application {
         primaryStage.show();
     }
 
+    /**
+     * prints a string on the text area, every print is one line.
+     * @param line the log.
+     */
     public void printLogLine(String line){
         this.textArea.setText(this.textArea.getText() + "\n" + line);
     }
