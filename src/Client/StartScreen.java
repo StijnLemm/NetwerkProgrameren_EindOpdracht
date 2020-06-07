@@ -9,8 +9,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-
 /**
  * This class is used to show the start screen of the application,
  * this screen will allow the user to put in the IP adress that he wants to connect to and press the play button to start the game.

@@ -12,10 +12,10 @@ import java.io.Serializable;
 
 public class PenPackage implements Serializable {
 
-    double x;
-    double y;
-    int width;
-    String color;
+    final double x;
+    final double y;
+    final int width;
+    final String color;
 
     public PenPackage(double x, double y, int width, Color color) {
         this.x = x;

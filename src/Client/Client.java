@@ -3,9 +3,11 @@ package Client;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Client implements Runnable {
@@ -135,13 +137,9 @@ public class Client implements Runnable {
             amountReceived = Integer.parseInt((String) objectInputStream.readObject());
 
             if (amountReceived < random) {
-                Platform.runLater(() -> {
-                    this.gameContainer.setYourTurn(true);
-                });
+                Platform.runLater(() -> this.gameContainer.setYourTurn(true));
             } else {
-                Platform.runLater(() -> {
-                    this.gameContainer.setYourTurn(false);
-                });
+                Platform.runLater(() -> this.gameContainer.setYourTurn(false));
             }
         } while (random == amountReceived);
     }
@@ -198,9 +196,7 @@ public class Client implements Runnable {
                             String guess = message.substring(6);
 
                             if (guess.toLowerCase().equals(gameContainer.getDrawWord().toLowerCase())) {
-                                Platform.runLater(() -> {
-                                    gameContainer.setYourTurn(false);
-                                });
+                                Platform.runLater(() -> gameContainer.setYourTurn(false));
                                 sendMsg("CORRECT");
 
                             } else {
@@ -209,9 +205,7 @@ public class Client implements Runnable {
 
                         } else if (message.contains("MSG")) { //message catching for info messages.
                             if (message.contains("CORRECT")) {
-                                Platform.runLater(() -> {
-                                    gameContainer.setYourTurn(true);
-                                });
+                                Platform.runLater(() -> gameContainer.setYourTurn(true));
 
                             } else if (message.contains("DISCONNECT")){
                                 stop(false);

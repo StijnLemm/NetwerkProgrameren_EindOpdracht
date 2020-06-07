@@ -223,7 +223,6 @@ public class GameContainer {
                         this.pen.setWidth(this.pen.getWidth() - 2);
                     }
                 } else {
-                    System.out.println("scroll! up");
                     if (this.pen.getWidth() < 90) {
                         this.pen.setWidth(this.pen.getWidth() + 2);
                     }
@@ -256,9 +255,7 @@ public class GameContainer {
             }
         });
 
-        window.setOnCloseRequest((event -> {
-            client.stop(true);
-        }));
+        window.setOnCloseRequest((event -> client.stop(true)));
     }
 
     private void initPen() {
@@ -326,7 +323,7 @@ public class GameContainer {
     /**
      * this method will clear the top right part of the screen to update the time left,
      * the method will be called from the GameTimer thread.
-     * @param secondsLeft
+     * @param secondsLeft amount of seconds left
      */
     public void updateTimer(int secondsLeft) {
         if(this.started) {

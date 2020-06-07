@@ -18,7 +18,7 @@ public class ServerGui extends Application {
     private TextArea textArea;
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         MultClientServer multClientServer = new MultClientServer(6666, this);
 
         Button startServer = new Button("Start server");
@@ -51,8 +51,9 @@ public class ServerGui extends Application {
         primaryStage.show();
     }
 
-     * This method is used to print lines on the logfield in the ServerGUI
+
     /**
+     * This method is used to print lines on the logfield in the ServerGUI
      * @param line
      */
     public void printLogLine(String line){
