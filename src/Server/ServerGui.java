@@ -51,8 +51,8 @@ public class ServerGui extends Application {
         primaryStage.show();
     }
 
-    /**
      * This method is used to print lines on the logfield in the ServerGUI
+    /**
      * @param line
      */
     public void printLogLine(String line){

@@ -50,7 +50,7 @@ public class MultClientServer {
                             serverGui.printLogLine("successfully init LinkThread");
                         }
 
-                    } catch (IOException e) {}
+                    } catch (IOException ignored) {}
                 }
             }).start();
 
